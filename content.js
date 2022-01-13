@@ -29,7 +29,10 @@ const match = (urls) => {
       console.log(request);
       if (request === 'subscription') {
         main();
+        sendResponse(true);
       }
+      sendResponse(false);
+      return true;
     });
   }
 };
@@ -37,12 +40,15 @@ const match = (urls) => {
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
   console.log(request);
   if (request.cmd === 'updateUrl') {
-    if (!matched) {
-      match(request.data);
-    }
+    // if (!matched) {
+    match(request.data);
+    // }
+    sendResponse(request.data);
   }
+  return true;
 });
-
-chrome.storage.sync.get(['proxmoxUrls'], (result) => {
-  match(result.proxmoxUrls);
-});
+setTimeout(() => {
+  chrome.storage.sync.get(['proxmoxUrls'], (result) => {
+    match(result.proxmoxUrls);
+  });
+}, 1000);
