@@ -25,6 +25,16 @@ const match = (urls) => {
   if (matchedAnyInterestedUrl(urls)) {
     matched = true;
     console.log('matched');
+    const loginBtn = document.querySelector(
+      '.x-btn.x-unselectable.x-box-item.x-toolbar-item.x-btn-default-small'
+    );
+
+    loginBtn &&
+      loginBtn.addEventListener('click', (e) => {
+        main();
+        console.log(e);
+      });
+
     chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
       console.log(request);
       if (request === 'subscription') {
@@ -36,7 +46,9 @@ const match = (urls) => {
     });
   }
 };
-
+chrome.runtime.sendMessage({ cmd: 'online' }, (res) => {
+  console.log(res);
+});
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
   console.log(request);
   if (request.cmd === 'updateUrl') {

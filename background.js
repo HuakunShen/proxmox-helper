@@ -10,7 +10,14 @@ chrome.runtime.onInstalled.addListener((details) => {
   }
 });
 
+const handleActionClick = (e) => {
+  console.log(e);
+  console.log('handleActionClick');
+};
+chrome.action.onClicked.addListener(handleActionClick);
+
 const webrequestCallback = (e) => {
+  console.log('webrequestCallback');
   console.log(e);
   console.log('send message 1');
 
@@ -22,14 +29,18 @@ const webrequestCallback = (e) => {
   });
 };
 
+const constructPatterns = (urls) => urls.map((url) => `${url}/*subscription*`);
+
+const initBg = () => {};
+
 chrome.storage.sync.get(['proxmoxUrls'], (result) => {
   console.log(result);
   if (result.proxmoxUrls === undefined) return;
-  const urls = result.proxmoxUrls.map((url) => `${url}/*`);
-  console.log(urls);
-
+  const patternUrls = constructPatterns(result.proxmoxUrls);
   console.log('Add Web Request Listener');
-  chrome.webRequest.onCompleted.addListener(webrequestCallback, { urls: urls }, [
+
+  console.log(patternUrls);
+  chrome.webRequest.onCompleted.addListener(webrequestCallback, { urls: patternUrls }, [
     'responseHeaders',
   ]);
 });
@@ -45,7 +56,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
       urls.push(request.data);
       chrome.storage.sync.set({ proxmoxUrls: urls }, function () {
         chrome.webRequest.onCompleted.removeListener(webrequestCallback);
-        const patternUrls = urls.map((url) => `${url}/*`);
+        const patternUrls = constructPatterns(urls);
         console.log(patternUrls);
         chrome.webRequest.onCompleted.addListener(webrequestCallback, { urls: patternUrls }, [
           'responseHeaders',
@@ -63,7 +74,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
       urls.splice(request.data, 1);
       chrome.storage.sync.set({ proxmoxUrls: urls }, function () {
         chrome.webRequest.onCompleted.removeListener(webrequestCallback);
-        const patternUrls = urls.map((url) => `${url}/*`);
+        const patternUrls = constructPatterns(urls);
         console.log(patternUrls);
         chrome.webRequest.onCompleted.addListener(webrequestCallback, { urls: patternUrls }, [
           'responseHeaders',
@@ -76,6 +87,8 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
       const urls = result.proxmoxUrls;
       sendResponse({ urls: urls });
     });
+  } else if (request.cmd === 'online') {
+    sendResponse('I am online');
   }
   return true;
 });
